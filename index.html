@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Prosper</title>
+
+		<meta name="description" content="A Spock-based integration testing library for prosperous AEM (Adobe CQ) development.">
+		<meta name="author" content="Mark Daugherty">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Prosper</h1>
+					<h4>AEM integration testing made Spockier.</h4>
+					<p>
+						<small>M. Daugherty</small>
+					</p>
+				</section>
+
+                <section>
+                    <h2>Questions?</h2>
+                </section>
+
+				<section>
+					<h2>Goals</h2>
+                    <ul>
+                        <li>Better test coverage for components, servlets, and services</li>
+                        <li>Eliminate OSGi container dependency, but provide a JCR for repository-based testing</li>
+                        <li>Use a pre-1.0 testing framework</li>
+                    </ul>
+				</section>
+
+                <section>
+                    <h2>No Excuses</h2>
+                    <p>Because there's always a reason to avoid writing tests.</p>
+                    <ul>
+                        <li>Easy to integrate into existing Maven projects</li>
+                        <li>Extensive documentation and examples (by hobby project on GitHub standards)</li>
+                        <li>API designed to minimize boilerplate for common tasks</li>
+                        <li>Elegant specification syntax</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <img src="http://img.pandawhale.com/48947-Bruce-Campbell-groovy-gif-Eui2.gif">
+                </section>
+
+                <section>
+                    <h2>Spock Syntax</h2>
+
+                    <pre>
+                        <code data-trim>
+class DataDriven extends Specification {
+    def "maximum of two numbers"() {
+        expect:
+        Math.max(a, b) == c
+
+        where:
+        a | b || c
+        3 | 5 || 5
+        7 | 0 || 7
+        0 | 0 || 0
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>Features</h2>
+                    <ul>
+                        <li>Transient repository for running tests in the standard Maven lifecycle</li>
+                        <li>Basic implementations of Sling dependencies</li>
+                        <li>Builders for creating content and mocking complex requests/responses</li>
+                        <li>Assertions for verifying JCR state</li>
+                        <li>Ability to add Sling adapters on-the-fly</li>
+                        <li>Support for testing JSP tag classes</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Bedrock</h2>
+                    <ul>
+                        <li>Additional builder for <code>ComponentRequest</code> with ability to register OSGi services</li>
+                        <li>Sightly support for AEM6</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>In Action</h2>
+                    <pre><code data-trim>
+class BreadcrumbSpec extends ComponentSpec {
+
+    def setupSpec() {
+        pageBuilder.content {
+            home("Home") {
+                "jcr:content" {
+                    breadcrumb(delineator: "-")
+                }
+                products("Products") {
+                    tools("Tools") {
+                        "jcr:content" {
+                            breadcrumb(rootPage: "/content/home")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    def "get delineator"() {
+        setup:
+        def request = componentRequestBuilder.build {
+            path = "/content/home/jcr:content/breadcrumb"
+        }
+
+        def breadcrumb = new Breadcrumb(request)
+
+        expect:
+        breadcrumb.delineator == "-"
+    }
+
+    def "get links"() {
+        setup:
+        def request = componentRequestBuilder.build {
+            path = "/content/home/products/tools/jcr:content/breadcrumb"
+        }
+
+        def breadcrumb = new Breadcrumb(request)
+        def links = breadcrumb.links
+
+        expect:
+        links.size() == 3
+        links*.title == ["Home", "Products", "Tools"]
+    }
+}
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h2>Questions?</h2>
+                </section>
+
+                <section>
+                    <img src="http://upload.wikimedia.org/wikipedia/en/f/f4/HanSolo.jpg">
+                    <blockquote>
+                        &ldquo;Go forth and Prosper.&rdquo;
+                    </blockquote>
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				theme: 'blood', // available themes are in /css/theme
+				transition: 'concave', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
